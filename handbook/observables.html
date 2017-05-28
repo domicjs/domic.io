@@ -1,0 +1,348 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Domic !</title>
+    <meta charset='utf-8'/>
+    
+
+    
+  
+      <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet"/>
+      <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet'/>
+      <link href='/style.css' rel='stylesheet'/>
+    
+
+  </head>
+  <body>
+    
+  
+
+  <nav class='handbook'>
+    <a href='/handbook/in-a-nutshell.html'>In a Nutshell</a>
+    <a href='/handbook/getting-started.html'>Getting Started</a>
+    <a href='/handbook/using-jsx.html'>Using JSX</a>
+    <a href='/handbook/observables.html'>Observables</a>
+    <a href='/handbook/domic-app.html'>Domic-App</a>
+  </nav>
+
+  <div class='container'>
+    <p>Observables are at the very core of Domic and are the foundation
+of its dynamic nature. They basically are a box holding a value
+that alerts the developper when it changes.</p>
+<p><strong>They are completely synchronous, and their value can always be accessed at all times.</strong></p>
+<p>Special care has been taken to make sure all of their methods
+are completely type-checked, even those
+that transform their types or access subproperties or array
+items.</p>
+<p>Note that this is <strong>not</strong> a change detection library. You <em>must</em> use
+the <code>set()</code> method if you want changes to be acted upon.</p>
+<h3>Creating an Observable</h3>
+<p>When creating an observable, you always must give a value. Most of the
+time, this value will be enough for typescript to guess what kind of
+Observable you're dealing with.</p>
+<pre><code class="language-tsx"><span class='keyword'>var</span> ob = <span class='keyword'>new</span> <span class='function-call'><span class='upper-start'>Observable</span></span>(<span class='number'>4</span>) <span class='comment'>// Observable&lt;number&gt;</span>
+<span class='keyword'>var</span> ob2 = <span class='keyword'>new</span> <span class='function-call'><span class='upper-start'>Observable</span></span>(<span class='string'>'hello'</span>) <span class='comment'>// Observable&lt;string&gt;</span>
+<span class='comment'>// As a shorthand, use the o() function</span>
+<span class='keyword'>var</span> ob3 = <span class='function-call'>o</span>(<span class='literal'>false</span>) <span class='comment'>// Observable&lt;boolean&gt;</span>
+<span class='keyword'>var</span> ob4 = <span class='function-call'>o</span>([] <span class='keyword'>as</span> <span class='type'>string[]</span>) <span class='comment'>// Observable&lt;string[]&gt;</span>
+</code></pre>
+<h3>Getting and setting its value</h3>
+<p>Unlike other libraries such as RxJS, domic's observables always
+have a value that you can get with the <code>get()</code> method.</p>
+<p>To set its value, simply use the <code>set()</code> method.</p>
+<pre><code class="language-tsx"><span class='keyword'>var</span> a = <span class='keyword'>new</span> <span class='function-call'><span class='upper-start'>Observable</span></span>(<span class='number'>3</span>)
+<span class='keyword'>var</span> b = a<span class='operator'>.</span><span class='function-call'>get</span>() <span class='comment'>// 3</span>
+a<span class='operator'>.</span><span class='function-call'>set</span>(<span class='number'>42</span>)
+<span class='keyword'>var</span> c = a<span class='operator'>.</span><span class='function-call'>get</span>() <span class='comment'>// 42</span>
+</code></pre>
+<p>Observables are generically typed to prevent a wrong data flow in your application.</p>
+<p>Domic is built with typescript's strict flags. <code>null</code> and <code>undefined</code>
+are thus checked if you opt-in the strict mode as well.</p>
+<pre><code class="language-tsx"><span class='keyword'>var</span> a = <span class='function-call'>o</span>(<span class='number'>1</span>) <span class='comment'>// a is Observable&lt;number&gt;</span>
+a<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'hello'</span>) <span class='comment'>// Error !</span>
+a<span class='operator'>.</span><span class='function-call'>set</span>(<span class='literal'>null</span>) <span class='comment'>// Error !</span>
+a<span class='operator'>.</span><span class='function-call'>set</span>(<span class='number'>4</span>) <span class='comment'>// OK</span>
+
+<span class='keyword'>var</span> b = <span class='function-call'>o</span>(<span class='number'>1 </span><span class='keyword'>as</span> <span class='type'>number <span class='operator'>|</span> <span class='type'>null</span></span>) <span class='comment'>// b is Observable&lt;number|null&gt;</span>
+b<span class='operator'>.</span><span class='function-call'>set</span>(<span class='literal'>null</span>) <span class='comment'>// OK&lt;/textarea&gt;</span>
+</code></pre>
+<h3>Observing value change</h3>
+<p>At its core, the Observable class provides an <code>addObserver()</code> method which takes a callback
+as its first argument that will be called with the new value. This method
+returns a function that can be used to &quot;unwatch&quot; the changes.</p>
+<p>By default, adding an observer <strong>immediately calls it</strong>. See the API to
+prevent this behaviour.</p>
+<blockquote>
+<p>The observing facilities are pretty much opt-in. Anything that happens outside
+a <code>set()</code> will not be reported to the observers.</p>
+</blockquote>
+<pre><code class="language-tsx"><span class='keyword'>var</span> o_str = <span class='function-call'>o</span>(<span class='string'>'hello'</span>)
+
+<span class='comment'>// prints 'hello'</span>
+<span class='keyword'>var</span> unreg = o_str<span class='operator'>.</span><span class='function-call'>addObserver</span>(newvalue =&gt;
+  console<span class='operator'>.</span><span class='function-call'>log</span>(newvalue)
+)
+
+<span class='comment'>// prints 'bye'</span>
+o_str<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'bye'</span>)
+
+<span class='function-call'>unreg</span>()
+
+<span class='comment'>// doesn't print now we're unregistered.</span>
+o_str<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'hello again'</span>)
+</code></pre>
+<blockquote>
+<p>Using <code>addObserver()</code> has another caveat ; as with any Observer pattern
+library, not cleaning up the observers when the observable is not used anymore
+can lead to memory leaks.</p>
+</blockquote>
+<p>To avoid problems, it is recommended to use the <code>observe</code> decorator or the
+<code>observe()</code> method of the <code>Controller</code> (or <code>Component</code>) class.</p>
+<p>These will make it so <code>addObserver()</code> is called whenever the
+Node is inserted into the document, and the unregister function
+whenever it is removed. You can add and remove the Node as much
+as you want, it will still work. This is accomplished thanks
+to the mounting mechanism.</p>
+<p>Note that there is also an <code>observe()</code> method on domic-app's <code>Service</code> class
+which purpose is more or less the same.</p>
+<pre><code class="language-tsx"><span class='function-call'>setupMounting</span>(document<span class='operator'>.</span>body)
+
+<span class='keyword'>var</span> o_str = <span class='function-call'>o</span>(<span class='string'>'hello'</span>)
+
+<span class='comment'>// nothing is printed now</span>
+<span class='keyword'>var</span> d = <span class='jsx'><span class='tag'>&lt;div <span class='attribute'><span class='upper-start'>$$</span></span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'><span class='function-call'>observe</span>(o_str, value =&gt; console<span class='operator'>.</span><span class='function-call'>log</span>(value))</span><span class='operator'>}</span>&gt;</span>
+  ...
+<span class='tag'>&lt;/div&gt;</span></span>
+
+<span class='comment'>// still nothing is printed</span>
+o_str<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'bye'</span>)
+
+<span class='comment'>// doesn't print right now, but will print 'bye' once the mouting</span>
+<span class='comment'>// is executed.</span>
+document<span class='operator'>.</span>body<span class='operator'>.</span><span class='function-call'>appendChild</span>(d)
+
+<span class='comment'>// ... at some point later</span>
+document<span class='operator'>.</span>body<span class='operator'>.</span><span class='function-call'>removeChild</span>(d)
+<span class='comment'>// ... and a little later</span>
+o_str<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'bye'</span>) <span class='comment'>// will not print anything.</span>
+</code></pre>
+<h3>Using them with TS</h3>
+<p>Observables can be used as children of tsx code. Any change to them
+and their value will automatically be updated into the DOM.</p>
+<p>Note however that for this to work, <em>mounting</em> needs to be setup
+as per the instructions in the previous chapter.</p>
+<pre><code class="language-tsx"><span class='keyword'>var</span> o_content = <span class='function-call'>o</span>(<span class='string'>'some content'</span>)
+document<span class='operator'>.</span><span class='function-call'>appendChild</span>(<span class='jsx'><span class='tag'>&lt;h3&gt;</span><span class='toplevel typescript in-jsx'><span class='operator'>{</span>o_content<span class='operator'>}</span></span><span class='tag'>&lt;/h3&gt;</span></span>)
+
+<span class='comment'>// At some point later, it becomes &lt;h3&gt;some other content&lt;/h3&gt;</span>
+<span class='comment'>// in the DOM</span>
+o_content<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'some other content'</span>)
+</code></pre>
+<p>Similarily, node attributes can also be observables and updated
+whenever one changes.</p>
+<p>This example shows the <code>class</code> attribute being linked to an observable.
+While this will work as intended, read the chapter about special attributes, as <code>class</code> is handled differently to allow for
+a lot of flexibility.</p>
+<pre><code class="language-tsx"><span class='keyword'>var</span> o_class = <span class='function-call'>o</span>(<span class='string'>'myclass'</span>)
+document<span class='operator'>.</span><span class='function-call'>appendChild</span>(<span class='jsx'><span class='tag'>&lt;h3 <span class='attribute'>class</span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'>o_class</span><span class='operator'>}</span>&gt;</span>My Title<span class='tag'>&lt;/h3&gt;</span></span>)
+
+<span class='comment'>// At some point later...</span>
+o_class<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'myotherclass'</span>)
+</code></pre>
+<h3>The MaybeObservable typ</h3>
+<p>We often want to be able to use code using both observables or
+regular values. Domic provides a type which helps programmers
+with this.</p>
+<p>Most of the domic functions, methods and components make extensive
+use of it.</p>
+<p>The <code>o()</code> function also has a strong link with <code>MaybeObservable</code>.
+If given an observable, it will simply return it instead of creating
+a new one.</p>
+<pre><code class="language-tsx"><span class='keyword'>type</span> <span class='type'><span class='upper-start'>MaybeObservable</span><span class='operator'>&lt;</span><span class='type'><span class='upper-start'>T</span></span><span class='operator'>&gt;</span> </span><span class='operator'>=</span> <span class='type'><span class='upper-start'>T</span> <span class='operator'>|</span> <span class='type'><span class='upper-start'>Observable</span><span class='operator'>&lt;</span><span class='type'><span class='upper-start'>T</span></span><span class='operator'>&gt;</span>
+
+</span></span><span class='comment'>// The o() function is defined like so:</span>
+<span class='function-declaration'><span class='keyword'>function</span> <span class='function'>o</span><span class='type'><span class='operator'>&lt;</span><span class='type'><span class='upper-start'>T</span></span><span class='operator'>&gt;</span></span><span class='operator'>(</span><span class='argument'>arg</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>MaybeObservable</span><span class='operator'>&lt;</span><span class='type'><span class='upper-start'>T</span></span><span class='operator'>&gt;</span></span><span class='operator'>)</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>Observable</span><span class='operator'>&lt;</span><span class='type'><span class='upper-start'>T</span></span><span class='operator'>&gt;</span> </span></span><span class='operator'>{</span>
+  <span class='comment'>/* ... */</span>
+<span class='operator'>}</span>
+
+<span class='keyword'>var</span> o_str = <span class='function-call'>o</span>(<span class='string'>'string'</span>) <span class='comment'>// o_str is now Observable&lt;string&gt;</span>
+<span class='keyword'>var</span> o_str2 = <span class='function-call'>o</span>(o_str) <span class='comment'>// o_str2 === o_str,</span>
+</code></pre>
+<p>A variable typed as <code>MaybeObservable</code> of an <code>Insertable</code> subtype (<code>number</code>, <code>string</code> and <code>Node</code>)
+can be inserted into TSX code as-is and domic will handle it.</p>
+<p>So will the <code>observe</code> decorator and the <code>Controller#observe()</code> method,
+which are in this way similar to <code>o()</code>.</p>
+<p>As a rule of thumb when designing components, always try to type your attributes
+as <code>MaybeObservable&lt;...&gt;</code>, and treat them as pure observables in your code.</p>
+<pre><code class="language-tsx"><span class='keyword'>interface</span> <span class='type'><span class='upper-start'>Attrs</span> </span><span class='keyword'>extends</span> <span class='type'><span class='upper-start'>BasicAttributes</span> </span><span class='operator'>{</span>
+  <span class='property'>myattr</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>MaybeObservable</span><span class='operator'>&lt;</span><span class='type'>string</span><span class='operator'>&gt;</span>
+</span><span class='operator'>}</span>
+
+<span class='function-declaration'><span class='keyword'>function</span> <span class='function'><span class='upper-start'>Test</span></span><span class='operator'>(</span><span class='argument'>attrs</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>Attrs</span></span><span class='operator'>,</span> <span class='argument'>ch</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>DocumentFragment</span></span><span class='operator'>)</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>Element</span> </span></span><span class='operator'>{</span>
+  <span class='keyword'>return</span> <span class='jsx'><span class='tag'>&lt;div <span class='attribute'><span class='upper-start'>$$</span></span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'><span class='function-call'>observe</span>(attrs<span class='operator'>.</span>myattr, value =&gt;
+    <span class='comment'>/* value is typed as string here */</span>
+  )</span><span class='operator'>}</span>&gt;</span>
+    <span class='tag'>&lt;h3&gt;</span>My attribute: <span class='toplevel typescript in-jsx'><span class='operator'>{</span>attrs<span class='operator'>.</span>myattr<span class='operator'>}</span></span><span class='tag'>&lt;/h3&gt;</span>
+    <span class='toplevel typescript in-jsx'><span class='operator'>{</span>children<span class='operator'>}</span></span>
+  <span class='tag'>&lt;/div&gt;</span></span>
+<span class='operator'>}</span>
+
+<span class='keyword'>var</span> o_test = <span class='function-call'>o</span>(<span class='string'>'hello !'</span>)
+
+<span class='comment'>// Both are valid</span>
+<span class='keyword'>var</span> t1 = <span class='jsx'><span class='tag'>&lt;<span class='upper-start'>Test</span> <span class='attribute'>myattr</span><span class='operator'>=</span><span class='string'>'some_value'</span>&gt;</span>Content<span class='tag'>&lt;/<span class='upper-start'>Test</span>&gt;</span></span>
+<span class='keyword'>var</span> t2 = <span class='jsx'><span class='tag'>&lt;<span class='upper-start'>Test</span> <span class='attribute'>myattr</span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'>o_test</span><span class='operator'>}</span>&gt;</span>Content<span class='tag'>&lt;/<span class='upper-start'>Test</span>&gt;</span></span>
+
+<span class='comment'>// ... later on</span>
+o_test<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'bye !'</span>)
+<span class='comment'>// will update t2 to &lt;h3&gt;My attribute: bye !&lt;/h3&gt;</span>
+</code></pre>
+<h3>Playing with properties</h3>
+<p><code>Observable</code> is not limited to basic types such as <code>number</code> or <code>string</code>.
+When using more complex types, there are several ways of interacting
+with the underlying object properties.</p>
+<p>To directly set or get a property, use the <code>get()</code> and <code>set()</code> methods,
+this time with a property name parameter.</p>
+<p><strong>These methods are type safe</strong>. They rely on the <code>keyof</code> operator introduced
+to typescript in version <code>2.1</code>.</p>
+<pre><code class="language-tsx"><span class='keyword'>var</span> o_test = <span class='function-call'>o</span>(<span class='operator'>{</span><span class='property'>a</span><span class='operator'>:</span> <span class='number'>1</span>, <span class='property'>b</span><span class='operator'>:</span> <span class='number'>2</span><span class='operator'>}</span>)
+o_test<span class='operator'>.</span><span class='function-call'>get</span>(<span class='string'>'a'</span>) <span class='comment'>// 1</span>
+
+<span class='comment'>// the the 'b' property to 3</span>
+o_test<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'b'</span>, <span class='number'>3</span>)
+o_test<span class='operator'>.</span><span class='function-call'>get</span>(<span class='string'>'b'</span>) <span class='comment'>// 3</span>
+
+<span class='comment'>// It is of course also possible to do</span>
+o_test<span class='operator'>.</span><span class='function-call'>get</span>()<span class='operator'>.</span>b <span class='comment'>// 3</span>
+</code></pre>
+<blockquote>
+<p>If you don't use <code>set(...)</code> when updating a value
+the observers won't be notified.</p>
+</blockquote>
+<pre><code class="language-tsx"><span class='keyword'>var</span> o_test = <span class='function-call'>o</span>(<span class='operator'>{</span><span class='property'>a</span><span class='operator'>:</span> <span class='number'>1</span>, <span class='property'>b</span><span class='operator'>:</span> <span class='number'>2</span><span class='operator'>}</span>)
+o_test<span class='operator'>.</span><span class='function-call'>addObserver</span>(value =&gt; console<span class='operator'>.</span><span class='function-call'>log</span>(value))
+o_test<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'b'</span>, <span class='number'>3</span>) <span class='comment'>// prints "{a: 1, b: 3}"</span>
+
+<span class='comment'>// prints nothing, even though the value did change.</span>
+o_test<span class='operator'>.</span><span class='function-call'>get</span>()<span class='operator'>.</span>b = <span class='number'>4
+</span></code></pre>
+<p>The <code>p()</code> method creates a new <code>Observable</code> that monitors
+a parent's property.</p>
+<p>It is typed as <code>PropObservable&lt;OriginalType, PropertyType&gt;</code> and will act
+<strong>exactly</strong> like <code>Observable&lt;PropertyType&gt;</code>.</p>
+<pre><code class="language-tsx"><span class='keyword'>type</span> <span class='type'><span class='upper-start'>MyType</span> </span><span class='operator'>=</span> <span class='type'><span class='operator'>{</span><span class='property'>a</span><span class='operator'>:</span> <span class='type'>number</span>, <span class='property'>b</span><span class='operator'>:</span> <span class='type'>string</span><span class='operator'>}</span>
+
+</span><span class='comment'>// Observable&lt;MyType&gt;</span>
+<span class='keyword'>var</span> o_test = <span class='function-call'>o</span>(<span class='operator'>{</span><span class='property'>a</span><span class='operator'>:</span> <span class='number'>1</span>, <span class='property'>b</span><span class='operator'>:</span> <span class='string'>'hello'</span><span class='operator'>}</span> <span class='keyword'>as</span> <span class='type'><span class='upper-start'>MyType</span></span>)
+
+<span class='comment'>// PropObservable&lt;MyType, string&gt;</span>
+<span class='keyword'>var</span> o_b = o_test<span class='operator'>.</span><span class='function-call'>p</span>(<span class='string'>'b'</span>)
+
+<span class='comment'>// It is castable</span>
+<span class='keyword'>var</span> o_b2<span class='operator'>:</span> <span class='type'><span class='upper-start'>Observable</span><span class='operator'>&lt;</span><span class='type'>string</span><span class='operator'>&gt;</span> </span>= o_test<span class='operator'>.</span><span class='function-call'>p</span>(<span class='string'>'b'</span>)
+
+<span class='comment'>// And it is perfectly OK to do this</span>
+<span class='keyword'>var</span> t = <span class='jsx'><span class='tag'>&lt;<span class='upper-start'>Test</span> <span class='attribute'>myattr</span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'>o_b</span><span class='operator'>}</span>&gt;</span>...<span class='tag'>&lt;/<span class='upper-start'>Test</span>&gt;</span></span>
+</code></pre>
+<p>PropObservables can be observed just like Observable. In this
+case, the observers only see the updates on the property.</p>
+<p>When a <code>set()</code> is called on a PropObservable, the
+parent's observers are called, even though the parent itself
+has not changed value (in a <code>===</code> sense).</p>
+<p>When a <code>set()</code> is called on the parent, the <code>PropObservable</code>'s
+observers are called as well.</p>
+<pre><code class="language-tsx"><span class='keyword'>var</span> o_test = <span class='function-call'>o</span>(<span class='operator'>{</span><span class='property'>a</span><span class='operator'>:</span> <span class='number'>1</span>, <span class='property'>b</span><span class='operator'>:</span> <span class='string'>'hey'</span><span class='operator'>}</span>)
+<span class='keyword'>var</span> o_b = o_test<span class='operator'>.</span><span class='function-call'>p</span>(<span class='string'>'b'</span>)
+
+<span class='comment'>// prints {a: 1, b: 'hey'} and 'hey'</span>
+o_test<span class='operator'>.</span><span class='function-call'>addObserver</span>(val, =&gt; console<span class='operator'>.</span><span class='function-call'>log</span>(val))
+o_b<span class='operator'>.</span><span class='function-call'>addObserver</span>(val =&gt; console<span class='operator'>.</span><span class='function-call'>log</span>(val))
+
+<span class='comment'>// prints {a: 1, b: 'ho'} and 'ho'</span>
+o_b<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'ho'</span>)
+
+<span class='comment'>// prints {a: 2, b: 'hulo'} and 'hulo'</span>
+o_test<span class='operator'>.</span><span class='function-call'>set</span>(<span class='operator'>{</span><span class='property'>a</span><span class='operator'>:</span> <span class='number'>2</span>, <span class='property'>b</span><span class='operator'>:</span> <span class='string'>'hulo'</span><span class='operator'>}</span>)
+</code></pre>
+<h3>Working with array</h3>
+<p>Observables can also work with arrays. They even have a few methods that deal
+exclusively with them.</p>
+<p>It is possible to create a <code>PropObservable&lt;T[], T&gt;</code>, or to set an array item
+using <code>set()</code> by using numbers as properties.</p>
+<pre><code class="language-tsx"><span class='keyword'>var</span> o_arr = <span class='function-call'>o</span>([<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>])
+o_arr<span class='operator'>.</span><span class='function-call'>set</span>(<span class='number'>0</span>, <span class='number'>4</span>) <span class='comment'>// now equals [4, 2, 3]</span>
+
+<span class='comment'>// This will now watch the second element</span>
+<span class='keyword'>var</span> o_second = o_arr<span class='operator'>.</span><span class='function-call'>p</span>(<span class='number'>1</span>)
+<span class='comment'>// its type is PropObservable&lt;number[], number&gt;</span>
+
+</code></pre>
+<h3>Transforming to another type or value</h3>
+<p>Observables can be tranformed. The transformed Observable is still linked
+to the original and can optionally set back a transformed value as well.</p>
+<pre><code class="language-tsx"><span class='keyword'>var</span> o_s = <span class='function-call'>o</span>(<span class='string'>'123'</span>) <span class='comment'>// Observable&lt;string&gt;</span>
+<span class='keyword'>var</span> o_n = o_s<span class='operator'>.</span><span class='function-call'>tf</span>(val =&gt; <span class='function-call'>parseFloat</span>(val)) <span class='comment'>// one way observable</span>
+
+o_s<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'333'</span>)
+o_n<span class='operator'>.</span><span class='function-call'>get</span>() === <span class='number'>333
+
+</span>o_n<span class='operator'>.</span><span class='function-call'>set</span>(<span class='number'>344</span>)
+o_n<span class='operator'>.</span><span class='function-call'>get</span>() === <span class='number'>344
+</span>o_s<span class='operator'>.</span><span class='function-call'>get</span>() !== <span class='string'>'344'</span> <span class='comment'>// o_s is still '333'</span>
+
+
+<span class='keyword'>var</span> o_n2 = o_s<span class='operator'>.</span><span class='function-call'>tf</span>(
+  val =&gt; <span class='function-call'>parseFloat</span>(val),
+
+  <span class='comment'>// this is the set function.</span>
+  <span class='comment'>// here original_obs === o_s</span>
+  (original_obs, newval) =&gt; original_obs<span class='operator'>.</span><span class='function-call'>set</span>(newval)
+)
+
+o_n2<span class='operator'>.</span><span class='function-call'>set</span>(<span class='number'>800</span>)
+o_s<span class='operator'>.</span><span class='function-call'>get</span>() === <span class='string'>'800'</span>
+</code></pre>
+<h3>Merging multiple observables into one</h3>
+<p>Use <code>o.merge()</code> to merge several Observables into one. Setting values
+inside the merged observable will forward the changes to the original
+observables.</p>
+<pre><code class="language-tsx"><span class='keyword'>var</span> o_a = <span class='function-call'>o</span>(<span class='string'>'string'</span>)
+<span class='keyword'>var</span> o_b = <span class='function-call'>o</span>(<span class='number'>3</span>)
+
+<span class='keyword'>var</span> o_merged = o<span class='operator'>.</span><span class='function-call'>merge</span>(<span class='operator'>{</span><span class='property'>a</span><span class='operator'>:</span> o_a, <span class='property'>b</span><span class='operator'>:</span> o_b<span class='operator'>}</span>)
+
+o_merged<span class='operator'>.</span><span class='function-call'>addObserver</span>((<span class='operator'>{</span>a, b<span class='operator'>}</span>) =&gt; <span class='operator'>{</span>
+  <span class='comment'>// a and b are correctly typed as string and number</span>
+<span class='operator'>}</span>)
+
+o_merged<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'b'</span>, <span class='number'>4</span>) <span class='comment'>// valid, o_b will change</span>
+
+o_merged<span class='operator'>.</span><span class='function-call'>p</span>(<span class='string'>'b'</span>) === o_b <span class='comment'>// true !</span>
+o_merged<span class='operator'>.</span><span class='function-call'>set</span>(<span class='operator'>{</span><span class='property'>a</span><span class='operator'>:</span> <span class='string'>'hello !'</span>, <span class='property'>b</span><span class='operator'>:</span> <span class='number'>6</span><span class='operator'>}</span>) <span class='comment'>// observers on o_a and o_b will be called.</span>
+</code></pre>
+<h3>Using the IndexableObservable</h3>
+<p>IndexableObservable is like <code>o.merge</code> except it doesn't need to know all
+the observables right from the start. Its limitation is that its sub-observables
+must all be of the same type.</p>
+<p>However, it is able to add or remove observables from its watched property,
+and you can use <code>for .. in</code> constructs with it.</p>
+<pre><code class="language-tsx"><span class='keyword'>var</span> o_a = <span class='function-call'>o</span>(<span class='number'>3</span>)
+<span class='keyword'>var</span> o_b = <span class='function-call'>o</span>(<span class='number'>4</span>)
+<span class='keyword'>var</span> o_id = o<span class='operator'>.</span><span class='function-call'>indexable</span>(<span class='operator'>{</span><span class='property'>a</span><span class='operator'>:</span> o_a, <span class='property'>b</span><span class='operator'>:</span> o_b<span class='operator'>}</span>)
+
+o_id<span class='operator'>.</span><span class='function-call'>get</span>() <span class='comment'>// {a: 3, b: 4}</span>
+o_id<span class='operator'>.</span><span class='function-call'>p</span>(<span class='string'>'a'</span>) === o_a
+
+o_id<span class='operator'>.</span><span class='function-call'>addDependency</span>(<span class='string'>'c'</span>, <span class='function-call'>o</span>(<span class='number'>5</span>))
+
+<span class='keyword'>for</span> (<span class='keyword'>var</span> name <span class='keyword'>in</span> o_id<span class='operator'>.</span><span class='function-call'>get</span>()) <span class='operator'>{</span>
+  console<span class='operator'>.</span><span class='function-call'>log</span>(name, o_id<span class='operator'>.</span><span class='function-call'>p</span>(name)<span class='operator'>.</span><span class='function-call'>get</span>()) <span class='comment'>// this is no problem.</span>
+<span class='operator'>}</span>
+</code></pre>
+<h3>This is it for now</h3>
+<p>For more examples and a detail of all the methods, head for the API.</p>
+  </div>
+
+
+  <body>
+</html>

@@ -1,0 +1,294 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Domic !</title>
+    <meta charset='utf-8'/>
+    
+
+    
+  
+      <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet"/>
+      <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet'/>
+      <link href='/style.css' rel='stylesheet'/>
+    
+
+  </head>
+  <body>
+    
+  
+
+  <nav class='handbook'>
+    <a href='/handbook/in-a-nutshell.html'>In a Nutshell</a>
+    <a href='/handbook/getting-started.html'>Getting Started</a>
+    <a href='/handbook/using-jsx.html'>Using JSX</a>
+    <a href='/handbook/observables.html'>Observables</a>
+    <a href='/handbook/domic-app.html'>Domic-App</a>
+  </nav>
+
+  <div class='container'>
+    <p>Domic is a library for writing complex UIs for html/javascript in
+typescript. It puts the accent on <strong>elegance</strong> and <strong>robustness</strong> ;
+all the API is geared towards ease of use, clarity and very strict typing,
+leveraging typescript's type inferance system as much as possible.</p>
+<p>Its philosophy is that the DOM is a nice thing and that standards
+are nowadays respected enough by all the big players to actually
+do use them. In domic, there is no virtual-dom, no wrappers around
+the DOM API, no template system, just pure DOM (with extra sugar).</p>
+<p>We deal with Nodes, and we use the methods that they define,
+for which <a href="https://developer.mozilla.org/en-US/docs/Web/API">there is ample documentation</a>.</p>
+<p>This project focuses mainly on recent browsers (IE is typically not high on the
+priority list). It is not geared to make websites. Rather, it was built
+with Single Page Applications in the browser and on mobile in mind.</p>
+<h3>Use tsx code to directly create document nodes</h3>
+<p>TSX is used to produce <code>Element</code>s. As such, you can <code>appendChild</code> the result of
+a tsx expression to any node that can hold a child.</p>
+<pre><code class="language-tsx">document<span class='operator'>.</span>body<span class='operator'>.</span><span class='function-call'>appendChild</span>(<span class='jsx'><span class='tag'>&lt;div&gt;</span>My div !<span class='tag'>&lt;/div&gt;</span></span>)
+</code></pre>
+<p>You can insert <code>string</code>, <code>number</code>, <code>Node</code>, <code>Observable&lt;string|number|Node&gt;</code>
+or an array of any of those as children to a node created in tsx.</p>
+<pre><code class="language-tsx"><span class='keyword'>var</span> something = <span class='string'>'something'</span>
+<span class='keyword'>var</span> some_class = <span class='string'>'some classes'</span>
+
+<span class='comment'>// The result of a TSX expression is Element and can thus</span>
+<span class='comment'>// be appended directly to the DOM.</span>
+document<span class='operator'>.</span>body<span class='operator'>.</span><span class='function-call'>appendChild</span>(<span class='jsx'><span class='tag'>&lt;div <span class='attribute'>class</span><span class='operator'>=</span><span class='string'>'myclass'</span>&gt;</span>
+  This will print <span class='toplevel typescript in-jsx'><span class='operator'>{</span>something<span class='operator'>}</span></span>
+  <span class='tag'>&lt;p <span class='attribute'>class</span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'>some_class</span><span class='operator'>}</span>&gt;</span>...<span class='tag'>&lt;/p&gt;</span>
+<span class='tag'>&lt;/div&gt;</span></span>)
+</code></pre>
+<h3>Use observables to bind values to the DOM</h3>
+<p>Domic's Observable type is not RxJS's Observable. Rxjs defines an Observable
+simply as something that can be observed and that will notify observers.
+In domic, Observable is a value holder ; it has a value at its creation
+and will have until it ceases to exist. All operations on them are synchronous.</p>
+<p>Like RxJS however, Observables are subscribed to by observers who then are
+notified of changes happening inside them.</p>
+<p>In this example, <code>bind</code> binds an observable to an input ; whenever the user interacts with
+it, the observable's value is <code>set()</code> to the value. Inversely, whenever
+the observable is <code>set()</code> from elsewhere, the input updates to reflect
+the changes.</p>
+<pre><code class="language-tsx"><span class='keyword'>var</span> o_number = <span class='function-call'>o</span>(<span class='number'>1</span>) <span class='comment'>// Observable&lt;number&gt;</span>
+<span class='keyword'>var</span> o_str = <span class='function-call'>o</span>(<span class='string'>''</span>) <span class='comment'>// Observable&lt;string&gt;</span>
+
+document<span class='operator'>.</span>body<span class='operator'>.</span><span class='function-call'>appendChild</span>(<span class='jsx'><span class='tag'>&lt;div&gt;</span>
+  <span class='tag'>&lt;p&gt;</span>
+    The value here will be incremented everytime we
+    press the button: <span class='toplevel typescript in-jsx'><span class='operator'>{</span>o_number<span class='operator'>}</span></span>
+    <span class='tag'>&lt;button <span class='attribute'><span class='upper-start'>$$</span></span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'><span class='function-call'>click</span>(ev =&gt; o_number<span class='operator'>.</span><span class='function-call'>add</span>(<span class='number'>1</span>))</span><span class='operator'>}</span>&gt;</span>Add 1<span class='tag'>&lt;/button&gt;</span>
+  <span class='tag'>&lt;/p&gt;</span>
+
+  <span class='tag'>&lt;p&gt;</span>This will follow whatever's inside the following input: <span class='toplevel typescript in-jsx'><span class='operator'>{</span>o_str<span class='operator'>}</span></span><span class='tag'>&lt;/p&gt;</span>
+  <span class='tag'>&lt;input <span class='attribute'>type</span><span class='operator'>=</span><span class='string'>'text'</span> <span class='attribute'><span class='upper-start'>$$</span></span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'><span class='function-call'>bind</span>(o_str)</span><span class='operator'>}</span>/&gt;</span>
+
+  <span class='tag'>&lt;p <span class='attribute'>class</span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'>o_str</span><span class='operator'>}</span>&gt;</span>This paragraph will have classes that are updated
+    whenever o_str changes.
+  <span class='tag'>&lt;/p&gt;</span>
+
+  <span class='tag'>&lt;p <span class='attribute'>class</span><span class='operator'>=</span><span class='string'>'static-class'</span>&gt;</span><span class='tag'>&lt;/p&gt;</span>
+<span class='tag'>&lt;/div&gt;</span></span>)
+</code></pre>
+<h3>Use decorators to manipulate nodes easily</h3>
+<p>At its simplest, a decorator is a function that takes
+an <code>Element</code> and returns anything. They are one of the &quot;low-level&quot;
+ways of working with the DOM through domic.</p>
+<p>The <code>$$</code> attribute is reserved to domic and is either a decorator
+or an array of decorators.</p>
+<pre><code class="language-tsx">document<span class='operator'>.</span>body<span class='operator'>.</span><span class='function-call'>appendChild</span>(<span class='jsx'><span class='tag'>&lt;div <span class='attribute'><span class='upper-start'>$$</span></span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'>[
+  <span class='function-call'>onmount</span>(node =&gt; console<span class='operator'>.</span><span class='function-call'>log</span>(node, <span class='string'>'is now in the document'</span>)),
+  <span class='function-call'>onunmount</span>(node =&gt; console<span class='operator'>.</span><span class='function-call'>log</span>(node, <span class='string'>'is not part of the document anymore'</span>))
+]</span><span class='operator'>}</span>&gt;</span>
+  <span class='tag'>&lt;button <span class='attribute'><span class='upper-start'>$$</span></span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'><span class='function-call'>click</span>(event =&gt; d<span class='operator'>.</span><span class='function-call'>remove</span>())</span><span class='operator'>}</span>&gt;</span>Click me<span class='tag'>&lt;/button&gt;</span>
+  <span class='tag'>&lt;input <span class='attribute'><span class='upper-start'>$$</span></span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'><span class='function-call'>on</span>(<span class='string'>'blur'</span>, ev =&gt; console<span class='operator'>.</span><span class='function-call'>log</span>(<span class='string'>'blurred...'</span>))</span><span class='operator'>}</span>/&gt;</span>
+<span class='tag'>&lt;/div&gt;</span></span>)
+
+document<span class='operator'>.</span>body<span class='operator'>.</span><span class='function-call'>appendChild</span>(d)
+</code></pre>
+<h3>Use controllers when decorators are not enough</h3>
+<p>Controllers can be bound to nodes. They offer a few more
+functionnalities than plain decorators. They can ;</p>
+<ul>
+<li>find other controllers on the same node
+or on a parent Node <strong>by type</strong> -- and not by name, to avoid
+collisions.</li>
+<li>observe Observables without risking memory leaks.</li>
+<li>easily run code when their node is being created, inserted into
+the document or removed from it.</li>
+</ul>
+<p>Use the <code>ctrl</code> decorator to bind them.</p>
+<pre><code class="language-tsx"><span class='keyword'>class</span> <span class='type'><span class='upper-start'>MyCtrl</span> </span><span class='keyword'>extends</span> <span class='type'><span class='upper-start'>Controller</span> </span><span class='operator'>{</span>
+
+  <span class='comment'>// You can have several @onmount</span>
+  <span class='decorator'><span class='operator'>@</span><span class='tag-name'>onmount
+  </span></span><span class='function method'>someFunction</span><span class='operator'>(</span><span class='operator'>)</span> <span class='operator'>{</span> <span class='comment'>// the function name is irrelevant</span>
+    console<span class='operator'>.</span><span class='function-call'>log</span>(<span class='literal'>this</span><span class='operator'>.</span>node, <span class='string'>'was inserted'</span>)
+  <span class='operator'>}</span>
+
+  <span class='decorator'><span class='operator'>@</span><span class='tag-name'>onunmount
+  </span></span><span class='function method'>someOtherFunction</span><span class='operator'>(</span><span class='argument'>node</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>Element</span></span><span class='operator'>)</span> <span class='operator'>{</span>
+    <span class='comment'>// this.node is null now, to avoid unnecessary reference</span>
+    <span class='comment'>// holding. It is given as an argument though if needed.</span>
+    console<span class='operator'>.</span><span class='function-call'>log</span>(<span class='string'>'the node was removed'</span>)
+  <span class='operator'>}</span>
+
+  <span class='decorator'><span class='operator'>@</span><span class='tag-name'>onrender
+  </span></span><span class='function method'>yetAnotherMethod</span><span class='operator'>(</span><span class='operator'>)</span> <span class='operator'>{</span>
+    console<span class='operator'>.</span><span class='function-call'>log</span>(<span class='literal'>this</span><span class='operator'>.</span>node, <span class='string'>'was just created'</span>)
+  <span class='operator'>}</span>
+
+  <span class='function method'>callMe</span><span class='operator'>(</span><span class='operator'>)</span> <span class='operator'>{</span>
+    console<span class='operator'>.</span><span class='function-call'>log</span>(<span class='string'>'I was called'</span>)
+  <span class='operator'>}</span>
+
+<span class='operator'>}</span>
+
+<span class='keyword'>class</span> <span class='type'><span class='upper-start'>MyOtherCtrl</span> </span><span class='keyword'>extends</span> <span class='type'><span class='upper-start'>Controller</span> </span><span class='operator'>{</span>
+  <span class='decorator'><span class='operator'>@</span><span class='tag-name'>onmount
+  </span></span><span class='function method'>helloWorld</span><span class='operator'>(</span><span class='operator'>)</span> <span class='operator'>{</span>
+    <span class='comment'>// Will print 'I was called' everytime this controller's node</span>
+    <span class='comment'>// is inserted into the document.</span>
+    <span class='literal'>this</span><span class='operator'>.</span><span class='function-call'>getController</span>(Test)<span class='operator'>.</span><span class='function-call'>callMe</span>()
+  <span class='operator'>}</span>
+<span class='operator'>}</span>
+
+<span class='comment'>// ctrl() accepts instances or classes, whichever is most useful then.</span>
+document<span class='operator'>.</span>body<span class='operator'>.</span><span class='function-call'>appendChild</span>(<span class='jsx'><span class='tag'>&lt;div
+  <span class='attribute'><span class='upper-start'>$$</span></span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'><span class='function-call'>ctrl</span>(<span class='keyword'>new</span> MyCtrl, MyOtherCtrl)</span><span class='operator'>}</span>
+/&gt;</span></span>)
+</code></pre>
+<h3>Use &quot;verbs&quot; in your TSX code for dynamic display.</h3>
+<p>Verbs indicate dynamicity. Unlike nodes produced by tsx which are
+real and generally possess a visual representation, they usually
+use comments as markers in the document to add or remove content
+dynamically.</p>
+<p>Good examples of verbs are <code>DisplayIf</code> and <code>Repeat</code> which are generally
+used pretty much in any project.</p>
+<p>They could be created with tsx code too, but the design decision was
+that there had to be a clear difference in spirit as well as in the code
+between elements with a clear graphical representation and others that
+are just here to help with structure.</p>
+<pre><code class="language-tsx"><span class='comment'>// This is a full example that would work if compiled and used.</span>
+<span class='keyword'>import</span> <span class='operator'>{</span>o, DisplayIf, Repeat, setupMounting<span class='operator'>}</span> <span class='keyword'>from</span> <span class='string'>'domic'</span>
+<span class='keyword'>import</span> <span class='operator'>{</span>Button<span class='operator'>}</span> <span class='keyword'>from</span> <span class='string'>'domic-material'</span>
+
+<span class='function-call'>setupMounting</span>(document)
+
+<span class='keyword'>var</span> o_bool = <span class='function-call'>o</span>(<span class='literal'>true</span>)
+<span class='keyword'>var</span> o_arr = <span class='function-call'>o</span>([<span class='string'>'hello'</span>, <span class='string'>'how'</span>, <span class='string'>'are'</span>, <span class='string'>'you'</span>])
+
+document<span class='operator'>.</span>body<span class='operator'>.</span><span class='function-call'>appendChild</span>(<span class='jsx'><span class='tag'>&lt;div&gt;</span>
+
+  <span class='toplevel typescript in-jsx'><span class='operator'>{</span><span class='function-call'><span class='upper-start'>DisplayIf</span></span>(o_bool,
+    value =&gt; <span class='jsx'><span class='tag'>&lt;p&gt;</span>
+      The condition is truthy and equals
+      <span class='toplevel typescript in-jsx'><span class='operator'>{</span>o_bool<span class='operator'>.</span><span class='function-call'>tf</span>(val =&gt; JSON<span class='operator'>.</span><span class='function-call'>stringify</span>(val))<span class='operator'>}</span></span>
+    <span class='tag'>&lt;/p&gt;</span></span>,
+    <span class='jsx'><span class='tag'>&lt;p&gt;</span>
+      And now it is false. Note that for DisplayIf
+      we don't need to use functions.
+    <span class='tag'>&lt;/p&gt;</span></span>
+  )<span class='operator'>}</span></span>
+
+  <span class='tag'>&lt;<span class='upper-start'>Button</span> <span class='attribute'>click</span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'>ev =&gt; o_bool<span class='operator'>.</span><span class='function-call'>toggle</span>()</span><span class='operator'>}</span>&gt;</span>Toggle<span class='tag'>&lt;/<span class='upper-start'>Button</span>&gt;</span>
+
+  <span class='toplevel typescript in-jsx'><span class='operator'>{</span><span class='function-call'><span class='upper-start'>Repeat</span></span>(o_arr, o_item =&gt; <span class='jsx'><span class='tag'>&lt;p&gt;</span><span class='toplevel typescript in-jsx'><span class='operator'>{</span>o_item<span class='operator'>}</span></span><span class='tag'>&lt;/p&gt;</span></span>)<span class='operator'>}</span></span>
+
+<span class='tag'>&lt;/div&gt;</span></span>)
+</code></pre>
+<h3>Create &quot;stateless&quot; components</h3>
+<p>Just like in React, you can create reusable components defined by simple
+functions. <code>children</code> is <strong>always</strong> a DocumentFragment for maximum
+performance when inserting.</p>
+<pre><code class="language-tsx"><span class='keyword'>interface</span> <span class='type'><span class='upper-start'>ButtonAttrs</span> </span><span class='keyword'>extends</span> <span class='type'><span class='upper-start'>BasicAttributes</span> </span><span class='operator'>{</span>
+  <span class='property'>click</span><span class='operator'>:</span> (<span class='property'>ev</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>MouseEvent</span></span>) =&gt; <span class='keyword'>any</span>
+<span class='operator'>}</span>
+
+<span class='function-declaration'><span class='keyword'>function</span> <span class='function'><span class='upper-start'>Button</span></span><span class='operator'>(</span><span class='argument'>attr</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>ButtonAttrs</span></span><span class='operator'>,</span> <span class='argument'>children</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>DocumentFragment</span></span><span class='operator'>)</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>Element</span> </span></span><span class='operator'>{</span>
+  <span class='keyword'>return</span> <span class='jsx'><span class='tag'>&lt;button <span class='attribute'><span class='upper-start'>$$</span></span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'><span class='function-call'>click</span>(attr<span class='operator'>.</span>click)</span><span class='operator'>}</span>&gt;</span><span class='toplevel typescript in-jsx'><span class='operator'>{</span>children<span class='operator'>}</span></span><span class='tag'>&lt;/button&gt;</span></span>
+<span class='operator'>}</span>
+
+document<span class='operator'>.</span>body<span class='operator'>.</span><span class='function-call'>appendChild</span>(
+  <span class='jsx'><span class='tag'>&lt;<span class='upper-start'>Button</span> <span class='attribute'>click</span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'>ev =&gt; console<span class='operator'>.</span><span class='function-call'>log</span>(<span class='string'>'clicked'</span>)</span><span class='operator'>}</span>&gt;</span>Click Me<span class='tag'>&lt;/<span class='upper-start'>Button</span>&gt;</span></span>
+)
+</code></pre>
+<h3>Or use component classes</h3>
+<p>Component Classes allow for packing code in a neater way and offer
+the added benefit of finding other components and communicate
+with them, as they are Controllers themselves with just an added
+<code>attrs</code> property and <code>render()</code> method.</p>
+<pre><code class="language-tsx"><span class='keyword'>interface</span> <span class='type'><span class='upper-start'>TestAttrs</span> </span><span class='keyword'>extends</span> <span class='type'><span class='upper-start'>BasicAttributes</span> </span><span class='operator'>{</span>
+  <span class='property'>title</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>MaybeObservable</span><span class='operator'>&lt;</span><span class='type'>title</span><span class='operator'>&gt;</span>
+</span><span class='operator'>}</span>
+
+<span class='keyword'>class</span> <span class='type'><span class='upper-start'>Test</span> </span><span class='keyword'>extends</span> <span class='type'><span class='upper-start'>Component</span> </span><span class='operator'>{</span>
+
+  <span class='property'>attrs</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>TestAttrs</span>
+
+  </span>o_str = <span class='function-call'>o</span>(<span class='string'>''</span>)
+
+  <span class='function method'>sayHello</span><span class='operator'>(</span><span class='argument'>s</span><span class='operator'>:</span> <span class='type'>string</span><span class='operator'>)</span> <span class='operator'>{</span>
+    <span class='literal'>this</span><span class='operator'>.</span>o_str<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string template-string'><span class='operator'>`</span>hello <span class='typescript'><span class='operator'>${</span><span class='toplevel typescript'>s</span><span class='operator'>}</span></span><span class='operator'>`</span></span>)
+  <span class='operator'>}</span>
+
+  <span class='function method'>render</span><span class='operator'>(</span><span class='argument'>children</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>DocumentFragment</span></span><span class='operator'>)</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>Element</span> </span><span class='operator'>{</span>
+    <span class='keyword'>return</span> <span class='jsx'><span class='tag'>&lt;div&gt;</span>
+      <span class='tag'>&lt;h3&gt;</span>The title: <span class='toplevel typescript in-jsx'><span class='operator'>{</span>attrs<span class='operator'>.</span>title<span class='operator'>}</span></span><span class='tag'>&lt;/h3&gt;</span>
+      <span class='toplevel typescript in-jsx'><span class='operator'>{</span><span class='literal'>this</span><span class='operator'>.</span>o_str<span class='operator'>}</span></span>
+      <span class='toplevel typescript in-jsx'><span class='operator'>{</span>children<span class='operator'>}</span></span>
+    <span class='tag'>&lt;/div&gt;</span></span>
+  <span class='operator'>}</span>
+<span class='operator'>}</span>
+
+<span class='keyword'>interface</span> <span class='type'><span class='upper-start'>Test2Attrs</span> </span><span class='keyword'>extends</span> <span class='type'><span class='upper-start'>BasicAttributes</span> </span><span class='operator'>{</span>
+  <span class='property'>value</span><span class='operator'>:</span> <span class='type'>string
+</span><span class='operator'>}</span>
+
+<span class='keyword'>class</span> <span class='type'><span class='upper-start'>Test2</span> </span><span class='keyword'>extends</span> <span class='type'><span class='upper-start'>Component</span> </span><span class='operator'>{</span>
+
+  <span class='property'>attrs</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>Test2Attrs</span>
+
+  </span><span class='comment'>// This method will be called as soon as</span>
+  <span class='comment'>// Test2 is inserted into the document.</span>
+  <span class='decorator'><span class='operator'>@</span><span class='tag-name'>onmount
+  </span></span><span class='function method'>lets_have_some_fun</span><span class='operator'>(</span><span class='operator'>)</span> <span class='operator'>{</span>
+    <span class='literal'>this</span><span class='operator'>.</span><span class='function-call'>getController</span>(Test)
+      <span class='operator'>.</span><span class='function-call'>sayHello</span>(<span class='literal'>this</span><span class='operator'>.</span>attrs<span class='operator'>.</span>value)
+  <span class='operator'>}</span>
+
+  <span class='function method'>render</span><span class='operator'>(</span><span class='operator'>)</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>Element</span> </span><span class='operator'>{</span>
+    <span class='keyword'>return</span> <span class='jsx'><span class='tag'>&lt;div/&gt;</span></span>
+  <span class='operator'>}</span>
+
+<span class='operator'>}</span>
+
+document<span class='operator'>.</span>body<span class='operator'>.</span><span class='function-call'>appendChild</span>(
+  <span class='jsx'><span class='tag'>&lt;<span class='upper-start'>Test</span> <span class='attribute'>title</span><span class='operator'>=</span><span class='string'>'hello domic !'</span>&gt;</span>
+    And the children
+    <span class='tag'>&lt;<span class='upper-start'>Test2</span> <span class='attribute'>value</span><span class='operator'>=</span><span class='string'>'testing stuff'</span>/&gt;</span>
+  <span class='tag'>&lt;/<span class='upper-start'>Test</span>&gt;</span></span>
+)
+</code></pre>
+<h3>... and that's pretty much it !</h3>
+<p>There is of course a lot to explore and discover. Observables are
+quite powerful and these examples barely graze what domic has to offer.</p>
+<p>This is however the nick of this library ; there are no other core
+concepts. Everything it does and everything that is built on it
+derives from these concepts ;</p>
+<ul>
+<li>TSX code creates <strong>Elements</strong> -- basically anything that gets
+rendered visually. For other node types, use</li>
+<li><strong>Verbs</strong>, to compose dynamically your documents</li>
+<li>Elements can be decorated by <strong>decorators</strong>,</li>
+<li>or they can have <strong>Controllers</strong> bound to them for more functionality.</li>
+<li><strong>Observables</strong> can be bound to children, to attributes and used
+generally in an MVVM way.</li>
+<li><strong>Components</strong> help in code reuse and come in two flavors ; &quot;stateless&quot;
+with just a function and with the <strong>Component</strong> class for more
+involved mechanics.</li>
+</ul>
+<p>The rest of this &quot;hands-on&quot; tutorial will now focus a little more deeply
+into domic's mechanics. The <code>API</code> will show everything but with less explanations.</p>
+  </div>
+
+
+  <body>
+</html>

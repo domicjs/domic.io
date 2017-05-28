@@ -1,0 +1,153 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Domic !</title>
+    <meta charset='utf-8'/>
+    
+
+    
+  
+      <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet"/>
+      <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet'/>
+      <link href='/style.css' rel='stylesheet'/>
+    
+
+  </head>
+  <body>
+    
+  
+
+  <nav class='handbook'>
+    <a href='/handbook/in-a-nutshell.html'>In a Nutshell</a>
+    <a href='/handbook/getting-started.html'>Getting Started</a>
+    <a href='/handbook/using-jsx.html'>Using JSX</a>
+    <a href='/handbook/observables.html'>Observables</a>
+    <a href='/handbook/domic-app.html'>Domic-App</a>
+  </nav>
+
+  <div class='container'>
+    <h3>Foreword</h3>
+<blockquote>
+<p>FIXME Move the TodoMVC example somewhere else.</p>
+</blockquote>
+<p>Domic applications are pure javascript. The base html markup you need is
+exclusively what you would put in <code>&lt;head&gt;</code> and an empty body, as all the
+DOM Nodes will be created by domic.</p>
+<p>For now, <code>require()</code> is the recommanded way to go, along with packers like
+<a href="https://webpack.github.io/">webpack</a> or <a href="http://browserify.org/">browserify</a>.
+All the examples use webpack and npm.</p>
+<p>In most examples, it will be assumed that the different objects/functions/classes
+that are being used were previously imported ;</p>
+<pre><code class="language-tsx"><span class='keyword'>import</span> <span class='operator'>{</span>Controller, o, Observable <span class='comment'>/*, ... */</span><span class='operator'>}</span> <span class='keyword'>from</span> <span class='string'>'domic'</span>
+</code></pre>
+<h3>Setting up tsconfig.json</h3>
+<p>For your project to compile correctly and output the correct code, you will
+need your tsconfig.json to contain at least the following (the comments
+might not work in the json files) ;</p>
+<pre><code class="language-tsx"><span class='operator'>{</span>
+  <span class='property'><span class='string'>"compilerOptions"</span></span><span class='operator'>:</span> <span class='operator'>{</span>
+    <span class='comment'>// generally useful for maximum compatibility</span>
+    <span class='string'>"target"</span>: <span class='string'>"es5"</span>,
+
+    <span class='comment'>// useful if you're writing a library</span>
+    <span class='string'>"declaration"</span>: <span class='literal'>true</span>,
+
+    <span class='comment'>// Use modules through npm</span>
+    <span class='string'>"module"</span>: <span class='string'>"commonjs"</span>,
+    <span class='string'>"moduleResolution"</span>: <span class='string'>"node"</span>,
+
+    <span class='comment'>// the following allow for real, nazi checking, which</span>
+    <span class='comment'>// is a must in all serious projects.</span>
+    <span class='string'>"strictNullChecks"</span>: <span class='literal'>true</span>,
+    <span class='string'>"noImplicitAny"</span>: <span class='literal'>true</span>,
+    <span class='string'>"noImplicitReturns"</span>: <span class='literal'>true</span>,
+    <span class='string'>"noImplicitThis"</span>: <span class='literal'>true</span>,
+    <span class='string'>"noUnusedLocals"</span>: <span class='literal'>true</span>,
+
+    <span class='comment'>// compile &lt;tags&gt; for use with a library that behaves like</span>
+    <span class='comment'>// React, which is domic's case.</span>
+    <span class='string'>"jsx"</span>: <span class='string'>"react"</span>,
+
+    <span class='comment'>// transform all JSX calls to use D(...) instead of</span>
+    <span class='comment'>// React.createElement(). D is exported globally by domic if</span>
+    <span class='comment'>// nothing existed.</span>
+    <span class='string'>"jsxFactory"</span>: <span class='string'>"D"</span>,
+
+    <span class='comment'>// we use decorators in components</span>
+    <span class='string'>"experimentalDecorators"</span>: <span class='literal'>true</span>,
+
+    <span class='comment'>// if you're using domic, chances are that you're going</span>
+    <span class='comment'>// to use the DOM :)</span>
+    <span class='string'>"lib"</span>: [<span class='string'>"es6"</span>, <span class='string'>"dom"</span>]
+    <span class='operator'>}</span>,
+  <span class='property'><span class='string'>"files"</span></span><span class='operator'>:</span> [
+    <span class='string'>"... your files go here"</span>
+  ]
+<span class='operator'>}</span>
+</code></pre>
+<p>You can use <code>d</code> instead of <code>D</code> for <code>&quot;jsxFactory&quot;</code>, especially if you have
+a global variable of the same name. However, you will have to <code>import {d} from 'domic'</code>
+in every. single. file. Your choice.</p>
+<p>Most of our project however use a more consistent tsconfig.json, along the lines of</p>
+<p>A good tsconfig.json is all you should need to start with domic. For webpack
+examples, you might want to check <a href="https://github.com/domicjs/domic-seed">domic-seed</a>.</p>
+<blockquote>
+<p>Create domic-seed</p>
+</blockquote>
+<p>For a lot of examples, check the <a href="https://github.com/domicjs/domic-examples">domic-example</a> which
+has several examples of all the things you can do with it.</p>
+<blockquote>
+<p>Create domic-examples</p>
+</blockquote>
+<pre><code class="language-tsx"><span class='keyword'>import</span> <span class='operator'>{</span>setupMounting, BasicAttributes, click, bind, on<span class='operator'>}</span> <span class='keyword'>from</span> <span class='string'>'domic'</span>
+
+<span class='comment'>// This step is necessary, as it sets up domic's internal mechanics.</span>
+<span class='function-call'>setupMounting</span>(document)
+
+<span class='keyword'>type</span> <span class='type'><span class='upper-start'>TodoType</span> </span><span class='operator'>=</span> <span class='type'><span class='operator'>{</span><span class='property'>value</span><span class='operator'>:</span> <span class='type'>string</span>, <span class='property'>completed</span><span class='operator'>?</span><span class='operator'>:</span> <span class='type'>boolean</span>, <span class='property'>editing</span><span class='operator'>?</span><span class='operator'>:</span> <span class='type'>boolean</span><span class='operator'>}</span>
+
+</span><span class='keyword'>var</span> o_todo = <span class='function-call'>o</span>(<span class='string'>''</span>)
+<span class='keyword'>var</span> o_todos = <span class='function-call'>o</span>([] <span class='keyword'>as</span> <span class='type'><span class='upper-start'>TodoType</span>[]</span>)
+
+<span class='keyword'>interface</span> <span class='type'><span class='upper-start'>TodoAttributes</span> </span><span class='keyword'>extends</span> <span class='type'><span class='upper-start'>BasicAttributes</span> </span><span class='operator'>{</span>
+  <span class='property'>model</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>MaybeObservable</span><span class='operator'>&lt;</span><span class='type'><span class='upper-start'>TodoType</span></span><span class='operator'>&gt;</span>
+</span><span class='operator'>}</span>
+
+<span class='function-declaration'><span class='keyword'>function</span> <span class='function'><span class='upper-start'>Todo</span></span><span class='operator'>(</span><span class='argument'>attrs</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>TodoAttributes</span></span><span class='operator'>)</span><span class='operator'>:</span> <span class='type'><span class='upper-start'>Element</span> </span></span><span class='operator'>{</span>
+  <span class='keyword'>var</span> o_model = <span class='function-call'>o</span>(attrs<span class='operator'>.</span>model)
+  <span class='keyword'>return</span> <span class='jsx'><span class='tag'>&lt;li <span class='attribute'>class</span><span class='operator'>=</span><span class='operator'>{</span> <span class='toplevel typescript'><span class='operator'>{</span><span class='property'>editing</span><span class='operator'>:</span> o_model<span class='operator'>.</span><span class='function-call'>p</span>(<span class='string'>'editing'</span>)<span class='operator'>}</span> </span><span class='operator'>}</span>&gt;</span>
+      <span class='tag'>&lt;div <span class='attribute'>class</span><span class='operator'>=</span><span class='string'>'view'</span>&gt;</span>
+        <span class='tag'>&lt;input <span class='attribute'>class</span><span class='operator'>=</span><span class='string'>'toggle'</span> <span class='attribute'>type</span><span class='operator'>=</span><span class='string'>'checkbox'</span>
+          <span class='attribute'><span class='upper-start'>$$</span></span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'><span class='function-call'>on</span>(<span class='string'>'change'</span>, <span class='function-declaration'><span class='keyword'>function</span> <span class='function'></span><span class='operator'>(</span><span class='argument'>ev</span><span class='operator'>)</span> </span><span class='operator'>{</span> o_model<span class='operator'>.</span><span class='function-call'>set</span>(<span class='string'>'editing'</span>, <span class='literal'>this</span><span class='operator'>.</span>value) <span class='operator'>}</span>) </span><span class='operator'>}</span>
+        /&gt;</span>
+        <span class='tag'>&lt;label&gt;</span><span class='toplevel typescript in-jsx'><span class='operator'>{</span>attrs<span class='operator'>.</span>model<span class='operator'>.</span><span class='function-call'>p</span>(<span class='string'>'value'</span>)<span class='operator'>}</span></span><span class='tag'>&lt;/label&gt;</span>
+        <span class='tag'>&lt;button <span class='attribute'>class</span><span class='operator'>=</span><span class='string'>'destroy'</span> <span class='attribute'><span class='upper-start'>$$</span></span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'><span class='function-call'>click</span>(e =&gt;
+          o_todos<span class='operator'>.</span><span class='function-call'>remove</span>(attrs<span class='operator'>.</span>model<span class='operator'>.</span><span class='function-call'>get</span>())
+        )</span><span class='operator'>}</span>/&gt;</span>
+      <span class='tag'>&lt;/div&gt;</span>
+    <span class='tag'>&lt;/li&gt;</span></span>
+<span class='operator'>}</span>
+
+document<span class='operator'>.</span><span class='function-call'>appendChild</span>(<span class='jsx'><span class='tag'>&lt;section <span class='attribute'>class</span><span class='operator'>=</span><span class='string'>'todoapp'</span>&gt;</span>
+  <span class='tag'>&lt;header <span class='attribute'>class</span><span class='operator'>=</span><span class='string'>'header'</span>&gt;</span>
+    <span class='tag'>&lt;h1&gt;</span>todos<span class='tag'>&lt;/h1&gt;</span>
+    <span class='tag'>&lt;input <span class='attribute'>class</span><span class='operator'>=</span><span class='string'>'new-todo'</span> <span class='attribute'>placeholder</span><span class='operator'>=</span><span class='string'>'What needs to be done ?'</span>
+      <span class='attribute'>autofocus </span><span class='attribute'><span class='upper-start'>$$</span></span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'><span class='function-call'>bind</span>(o_todo)</span><span class='operator'>}</span>
+    /&gt;</span>
+  <span class='tag'>&lt;/header&gt;</span>
+  <span class='tag'>&lt;section <span class='attribute'>class</span><span class='operator'>=</span><span class='string'>'main'</span>&gt;</span>
+    <span class='tag'>&lt;input <span class='attribute'>class</span><span class='operator'>=</span><span class='string'>'toggle-all'</span> <span class='attribute'>type</span><span class='operator'>=</span><span class='string'>'checkbox'</span>/&gt;</span>
+    <span class='tag'>&lt;ul <span class='attribute'>class</span><span class='operator'>=</span><span class='string'>'todo-list'</span>&gt;</span>
+      <span class='toplevel typescript in-jsx'><span class='operator'>{</span><span class='comment'>/* This will do the job of watching the o_todos array
+        and display all of the todos.
+      */</span><span class='operator'>}</span></span>
+      <span class='toplevel typescript in-jsx'><span class='operator'>{</span><span class='function-call'><span class='upper-start'>Repeat</span></span>(o_todos, o_todo =&gt; <span class='jsx'><span class='tag'>&lt;<span class='upper-start'>Todo</span> <span class='attribute'>model</span><span class='operator'>=</span><span class='operator'>{</span><span class='toplevel typescript'>o_todo</span><span class='operator'>}</span>/&gt;</span></span>)<span class='operator'>}</span></span>
+    <span class='tag'>&lt;/ul&gt;</span>
+  <span class='tag'>&lt;/section&gt;</span>
+<span class='tag'>&lt;/section&gt;</span></span>)
+</code></pre>
+  </div>
+
+
+  <body>
+</html>
